@@ -1,1 +1,4 @@
-Keana's Final Project for DSCI 510 - Spring
+#WNBA Predictive Player Viability
+
+Keana Monroy-Gill
+DSCI 510 - Spring 2026
