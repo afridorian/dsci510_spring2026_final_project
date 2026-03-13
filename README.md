@@ -10,6 +10,7 @@ and All-Star selection.
 1. WNBA player box statistics (2002-2022)
    1. 107000 records
    2. espn.com box score scrape from wehoop repo
+   3. 2004 is the first year with complete datasets
 2. NCAA player box statistics
    1. Current WNBA players NCAA performance
       1.
