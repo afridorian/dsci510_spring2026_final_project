@@ -7,7 +7,7 @@ categorized into four levels: not viable, bench player, starter, and all star. T
 was determined by a composite performance score derived from professional stats, collegiate stats, awards, years in the league, 
 and All-Star selection.
 ## Data Sources
-1. WNBA player box statistics (2002-2022)
+1. WNBA player box statistics (2003-2022)
    1. 107000 records
    2. espn.com box score scrape from wehoop repo
    3. 2004 is the first year with complete datasets
@@ -20,23 +20,13 @@ and All-Star selection.
 4. All-Star Roster (1999-2025)
 5. WNBA player awards
 6. NCAA player awards
-### Constraints
-The model is missing information from data not included in hard line stats: 
-## Data Preprocessing
-### Inclusions
-### Exclusions 
-1. Non-domestic professional players. Domestic is defined by having played a minimum of 3 years of NCAA basketball.
-### Composite Variable Engineering
-## Feature Engineering
-Composite Score - the analysis used to determine the composite score <br>
-How the composite differs for each position at each viability level
-## Target Variable
-## Modeling Approach 
-### Logistic Regression
-### Decision Tree
-### Random Forest
-## Model Evaluation
-## Results Interpretation
-## Conclusion
-Keana Monroy-Gill <br>
-DSCI 510 - Spring 2026
+## Results
+## Installation
+## Running Analysis
+
+
+From `src/` directory run:
+
+`python main.py `
+
+Results will appear in `results/` folder. All obtained will be stored in `data/`

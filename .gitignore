@@ -15,3 +15,12 @@
 /.idea/modules.xml
 /.idea/vcs.xml
 /.idea/workspace.xml
+# User excluded files
+/notes for self
+/src/test.json
+/production.ipynb
+/results/
+/data/
+/src/test2.json
+/src/.env
+/src/tests.ipynb
