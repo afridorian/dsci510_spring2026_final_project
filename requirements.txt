@@ -1,0 +1,13 @@
+pathlib
+python-dotenv
+pandas
+requests
+pathlib
+os
+re
+bs4
+random
+json
+time
+unicodedata
+datatime
