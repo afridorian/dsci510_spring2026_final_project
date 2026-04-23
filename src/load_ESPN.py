@@ -13,7 +13,7 @@ def ESPN_scrape(API,playerID,outputPathPlayers,outputPathStats):
     playerStats = []
 
     #convert df to tuple
-    playerID = list(pd.read_parquet(playerID).itertuples(index=False,name=None))
+    playerID = list(playerID.itertuples(index=False,name=None))
 
     for i in playerID:
         player = str(i[0]) #pull player ID from tuple
@@ -33,7 +33,7 @@ def ESPN_scrape(API,playerID,outputPathPlayers,outputPathStats):
                "height": None,
                "DOB": None,
                "position": None,
-               "positionAbbr": None,
+               "athlete_position_abbreviation": None,
                "status": None,
                "totalWNBASeasons": None,
                "NCAA_athlete_id": None,
@@ -45,7 +45,7 @@ def ESPN_scrape(API,playerID,outputPathPlayers,outputPathStats):
         bio["height"] = profAthPg.get('height'),
         bio["DOB"] = profAthPg.get('dateOfBirth')
         bio["position"] = profAthPg.get('position',{}).get('name')
-        bio["positionAbbr"] = profAthPg.get('position',{}).get('abbreviation')
+        bio["athlete_position_abbreviation"] = profAthPg.get('position',{}).get('abbreviation')
         bio["status"] = profAthPg.get('status',{}).get('type')
 
         #reset page variables
@@ -88,20 +88,20 @@ def ESPN_scrape(API,playerID,outputPathPlayers,outputPathStats):
                            'avgTurnovers': 'avg_turnovers', 'avgTwoPointFieldGoalsAttempted': 'avg_2p_fg_attempt',
                            'avgTwoPointFieldGoalsMade': 'avg_2p_fg_made', 'blockFoulRatio': 'block_foul_ratio',
                            'blocks': 'blocks',
-                           'defensiveRebounds': 'defensive_rebounds', 'fieldGoalPct': 'field_goal_pct',
+                           'defensiveRebounds': 'defensive_rebounds', 'fieldGoalPct': 'field_goal_percentage',
                            'fieldGoalsAttempted': 'field_goals_attempted', 'fieldGoalsMade': 'field_goals_made',
-                           'fouls': 'fouls', 'freeThrowPct': 'free_throw_pct', 'freeThrowsAttempted': 'free_throws_attempted',
+                           'fouls': 'fouls', 'freeThrowPct': 'free_throw_percentage', 'freeThrowsAttempted': 'free_throws_attempted',
                            'freeThrowsMade': 'free_throws_made',
                            'gamesPlayed': 'games_played', 'gamesStarted': 'games_started', 'minutes': 'minutes',
                            'offensiveRebounds': 'offensive_rebounds',
                            'plusMinus': 'plus_minus', 'points': 'points', 'rebounds': 'rebounds',
                            'stealFoulRatio': 'steal_foul_ratio',
                            'stealTurnoverRatio': 'steal_turnover_ratio', 'steals': 'steals',
-                           'threePointFieldGoalPct': 'three_point_field_goal_pct',
-                           'threePointFieldGoalsAttempted': 'three_point_field_goals_attemptedt',
+                           'threePointFieldGoalPct': 'three_point_field_goal_percentage',
+                           'threePointFieldGoalsAttempted': 'three_point_field_goals_attempted',
                            'threePointFieldGoalsMade': 'three_point_field_goals_made',
                            'turnovers': 'turnovers',
-                           'twoPointFieldGoalPct': 'two_point_field_goal_pct', 'twoPointFieldGoalsAttempted': 'two_point_field_goals_attempted',
+                           'twoPointFieldGoalPct': 'two_point_field_goal_percentage', 'twoPointFieldGoalsAttempted': 'two_point_field_goals_attempted',
                            'twoPointFieldGoalsMade': 'two_point_field_goals_made'}
 
             for entry in collegeStatsPg['entries']: #iterates through entries dict
@@ -132,10 +132,7 @@ def get_ESPN_athlete_id(filePath,outputPath):
     players = players.groupby('athlete_id')['athlete_display_name'].agg(lambda x: ', '.join(x.astype(str))).reset_index() #if athlete IDs appear more than once, create a list in the player name column of each player associated with the id
     players.to_parquet(outputPath)
     print('Get ESPN athlete ID complete.')
-
-#DATA CLEANING FUNCTIONS
-def normalize_athlete_id(filePath):
-    pass
+    return players
 
 # if __name__ == "__main__":
 #     API = config.espnAPIURL

@@ -33,7 +33,8 @@ def concat_files(files, filePath, outputPath): #take original filePath, range of
                  "blk": "blocks",
                  "to": "turnovers",
                  "pf": "fouls",
-                 "pts": "points"
+                 "pts": "points",
+                 "starter": "games_started"
                  }
 
     url = [f'{filePath}/{i}' for i in files] #get full path for each file
@@ -41,7 +42,7 @@ def concat_files(files, filePath, outputPath): #take original filePath, range of
     concat = pd.concat(output, join='outer', ignore_index=True) #ignore index so the duplicates don't overwrite
     concat.to_parquet(outputPath)
     print(f'{files} successfully joined.')
-    return outputPath #output new file location for storage as another variable
+    return concat #output df
 
 #clean up parquet dataSet to account for nan, mixed types, missing values
 def normalize(filePath):
@@ -55,24 +56,25 @@ def normalize(filePath):
                        'athlete_jersey', 'team_score', 'opponent_team_id', 'opponent_team_score','weight','height','totalWNBASeasons',
                        'NCAA_athlete_id','totalNCAASeasons','games_played','two_point_field_goals_made','two_point_field_goals_attempted',
                        'games_started'],
-               "float": ['field_goal_pct','free_throw_pct','three_point_field_goal_pct','true_shooting_percentage','effective_field_goal_percentage',
+               "float": ['field_goal_percentage','free_throw_percentage','three_point_field_goal_percentage','true_shooting_percentage','effective_field_goal_percentage',
                          'three_point_attempt_rate','free_throw_attempt_rate','offensive_rebound_percentage',
                          'defensive_rebound_percentage','total_rebound_percentage','assist_percentage','steal_percentage',
                          'block_percentage','turnover_percentage','usage_percentage','offensive_rating','defensive_rating',
                          'avg_min','avg_fg_made','avg_fg_attempt','avg_fg_pct','avg_3p_fg_made','avg_3p_fg_attempt','avg_3p_fg_pct',
                          'avg_2p_fg_made','avg_2p_fg_attempt','avg_2p_fg_pct','avg_effective_fg_pct','avg_ft_made','avg_ft_attempt',
                          'avg_ft_pct','avg_off_reb','avg_def_reb','avg_rebounds','avg_assists','avg_steals','avg_blocks',
-                         'avg_turnovers','avg_fouls','avg_points','steal_foul_ratio','steal_turnover_ratio','two_point_field_goal_pct'],
+                         'avg_turnovers','avg_fouls','avg_points','steal_foul_ratio','steal_turnover_ratio','two_point_field_goal_percentage'],
                "dt": ['game_date_time','DOB'],
                "date": ['game_date'],
-               "bool": ['starter','ejected','did_not_play','active','team_winner','NCAAStats'],
+               "bool": ['games_started','ejected','did_not_play','active','team_winner','NCAAStats'],
                "str": ['athlete_display_name', 'team_name', 'team_location', 'team_short_display_name',
                        'athlete_short_name', 'athlete_position_name', 'athlete_position_abbreviation',
                        'team_display_name', 'team_uid', 'team_slug', 'team_logo', 'team_abbreviation', 'team_color',
                        'team_alternate_color', 'home_away', 'opponent_team_name', 'opponent_team_location',
                        'opponent_team_display_name', 'opponent_team_abbreviation', 'opponent_team_logo',
                        'opponent_team_color', 'opponent_team_alternate_color', 'athlete_headshot_href', 'reason','position',
-                       'positionAbbr','status','class','positionAbbr']}
+                       'status','class']
+               }
 
     #get a list of values, apply conversion to all values of each corresponding column in the list
     for i in headers:
@@ -97,6 +99,7 @@ def normalize(filePath):
 
     parquetFile.to_parquet(filePath)
     print('File normalization complete.')
+    return parquetFile
 
 # if __name__ == "__main__":
 #     # url = gitHubLink

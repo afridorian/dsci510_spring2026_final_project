@@ -1,19 +1,17 @@
-from pstats import add_func_stats
-
 import pandas as pd
 import re
 import requests
 from bs4 import BeautifulSoup as bs
 import random
-import config
 import json
 import time
 import unicodedata
 from datetime import datetime as dt
 
+
 #BASKETBALL/SPORTS REFERENCE WEB SCRAPE DATA PRE-PROCESSING FUNCTIONS
 #wnba box score schedule from 1997-2003
-def br_wnbaschedule_scrape(url,years,outputPath): #starting URL and years to scrape
+def br_wnbaschedule_scrape(url,years,outputPath)->dict: #starting URL and years to scrape
 
     start = dt.now()
 
@@ -209,12 +207,10 @@ def br_wnbabox_scrape(url,scheduleFile,outputPath):
 
                     if 'basic' in tables:
                         basicHeaders = ['athlete_display_name', 'minutes', 'field_goals_made', 'field_goals_attempted',
-                                        'fg_pct', 'three_point_field_goals_made',
-                                        'three_point_field_goals_attempted', '3p_fg_pct', 'free_throws_made',
-                                        'free_throws_attempted', 'ft_pct',
-                                        'offensive_rebounds', 'defensive_rebounds', 'rebounds', 'assists', 'steals',
-                                        'blocks', 'turnovers', 'fouls',
-                                        'points', 'plus_minus']
+                                        'field_goal_percentage', 'three_point_field_goals_made','three_point_field_goals_attempted',
+                                        'three_point_field_goals_pct', 'free_throws_made','free_throws_attempted',
+                                        'free_throw_percentage','offensive_rebounds', 'defensive_rebounds', 'rebounds', 'assists',
+                                        'steals','blocks', 'turnovers', 'fouls','points', 'plus_minus']
                         outputHeaders = dict(zip(headersList,basicHeaders))
                         isStarter = True  # default is players are starters
                         for r in range(headersRowCount, numRows):  # loop through rows
@@ -286,19 +282,19 @@ def br_wnbabox_scrape(url,scheduleFile,outputPath):
         df = pd.DataFrame(gameStats)
         df.to_parquet(outputFileName)
         end = dt.now()
-        return outputFileName
-        print(f'Basketball Reference WNBA Box Scrape complete at {end.strftime("%Y-%m-%d %H:%M:%S")} with duration of {end-start}.')
+        print(f'Basketball Reference WNBA Box Scrape complete at {end.strftime("%Y-%m-%d %H:%M:%S")} with duration of {end - start}.')
+        return df
 
 #get unique player names from WNBA and from ESPN scrape that have no NCAA stats
-def get_SR_athlete_names(athleteBios,filePath):
+def get_SR_athlete_names(athleteBios,allAthletes)->set:
 
     #get list of bios that have no NCAA ESPN stats
-    bios = pd.read_parquet(athleteBios)
+    bios = athleteBios
     trueBios = bios[bios['NCAAStats']==True]
     excludeBios = set(trueBios['athlete_display_name'])
 
     #get list of all athlete names from WNBA data
-    data = pd.read_parquet(filePath)
+    data = allAthletes
     players = set(data['athlete_display_name'].unique())
 
     #compare all missingAthletes to missingAthletes that have NCAA stats
@@ -317,10 +313,11 @@ def srcbb_ncaaplayer_scrape(url,players,outputPath):
     playerStats = []
     formattedNames = [i.lower().replace("'","").split('-', 1)[0].split(" ") for i in players] #remove ', names after hypens, and create 2 objects, first name, last name
     for iN, name in enumerate(formattedNames):  # get the player from the list of names
+        x = 1
         try:
-            link = f'{url}{name[0]}-{name[1]}-1.html'
+            link = f'{url}{name[0]}-{name[1]}-{x}.html'
         except IndexError:
-            print(f'{players[iN]} completed with no data found at {dt.now().strftime("%Y-%m-%d %H:%M:%S")}.')
+            print(f'{players[iN]} completed with index error at {dt.now().strftime("%Y-%m-%d %H:%M:%S")}.')
             continue
         time.sleep(5)  # bypass site rate limiting
         webPage = requests.get(link, headers=headers)
@@ -410,18 +407,20 @@ def srcbb_ncaaplayer_scrape(url,players,outputPath):
                     perGame = {}  # set player game dict
                     perGame['athlete_display_name'] = players[iN]
                     for c in range(numCols):  # loop through columns with index position
-                        columnMap = {'Season':'season', 'Class':'class', 'Pos':'positionAbbr',
+                        columnMap = {'Season':'season', 'Class':'class', 'Pos':'athlete_position_abbreviation',
                                      'G': 'games_played', 'FG': 'avg_fg_made', 'FGA': 'avg_fg_attempt',
                                      'FG%': 'avg_fg_pct','3P': 'avg_3p_fg_made', '3PA': 'avg_3p_fg_attempt',
                                      '3P%': 'avg_3p_fg_pct','2P': 'avg_2p_fg_made', '2PA': 'avg_2p_fg_attempt',
                                      '2P%': 'avg_2p_fg_pct','eFG%': 'avg_effective_fg_pct', 'FT': 'avg_ft_made',
                                      'FTA': 'avg_ft_attempt','FT%': 'avg_ft_pct','ORB': 'avg_off_reb',
-                                     'DRB': 'avg_def_reb', 'TRB': 'avg_rebounds','AST': 'avg_assists',
+                                     'DRB': 'avg_def_reb', 'TRB': 'avg_rebs','AST': 'avg_assists',
                                      'STL': 'avg_steals','BLK': 'avg_blocks', 'TOV': 'avg_turnovers',
                                      'PF': 'avg_fouls','PTS': 'avg_points','MP': 'avg_min'}
                         if headersList[c] in columnMap.keys(): #filter out unwanted data
                             if c == 0: #format text string for season
                                 val = int((tableGrid.get((r, c), ""))[:2]+(tableGrid.get((r, c), ""))[-2:])
+                                if val == 1900: #account for 2000, no 20 to append the double zero to
+                                    val = 2000
                             else:
                                 val = tableGrid.get((r, c), "")  # get value
                             perGame[columnMap[headersList[c]]] = val  # add val to per game dict
@@ -437,11 +436,11 @@ def srcbb_ncaaplayer_scrape(url,players,outputPath):
                         continue  # continue to next row in the loop
                     totals = {}  # set player game dict
                     for c in range(numCols):  # loop through columns with index position
-                        columnMap = {'Season': 'season', 'Class': 'class', 'Pos': 'athlete_position_abbreviation',
+                        columnMap = {'Season': 'season', 'Class': 'class',
                                      'G': 'games_played', 'FG': 'field_goals_made', 'FGA': 'field_goals_attempted',
-                                     'FG%': 'field_goals_pct', '3P': 'three_point_field_goals_made', '3PA': 'three_point_field_goals_attempted',
-                                     '3P%': 'three_point_field_goals_pct', '2P': 'two_point_field_goals_made', '2PA': 'two_point_field_goals_attempted',
-                                     '2P%': 'two_point_field_goals_pct', 'eFG%': 'effective_field_goal_percentage', 'FT': 'free_throws_made',
+                                     'FG%': 'field_goal_percentage', '3P': 'three_point_field_goals_made', '3PA': 'three_point_field_goals_attempted',
+                                     '3P%': 'three_point_field_goal_percentage', '2P': 'two_point_field_goals_made', '2PA': 'two_point_field_goals_attempted',
+                                     '2P%': 'two_point_field_goal_percentage', 'eFG%': 'effective_field_goal_percentage', 'FT': 'free_throws_made',
                                      'FTA': 'free_throws_attempted', 'FT%': 'free_throw_percentage', 'ORB': 'offensive_rebounds',
                                      'DRB': 'defensive_rebounds', 'TRB': 'rebounds', 'AST': 'assists',
                                      'STL': 'steals', 'BLK': 'blocks', 'TOV': 'turnovers',
@@ -449,6 +448,8 @@ def srcbb_ncaaplayer_scrape(url,players,outputPath):
                         if headersList[c] in columnMap.keys():  # filter out unwanted data
                             if c == 0: #format text string for season
                                 val = int((tableGrid.get((r, c), ""))[:2]+(tableGrid.get((r, c), ""))[-2:])
+                                if val == 1900:  # account for 2000, no 20 to append the double zero to
+                                    val = 2000
                             else:
                                 val = tableGrid.get((r, c), "")  # get value
                             totals[columnMap[headersList[c]]] = val  # add val to per game dict
@@ -466,6 +467,7 @@ def srcbb_ncaaplayer_scrape(url,players,outputPath):
     df.to_parquet(f'{outputPath}/SR_NCAA_stats.parquet')
     end = dt.now()
     print(f'Sports Reference Scrape complete at {end.strftime("%Y-%m-%d %H:%M:%S")} with duration of {end-start}.')
+    return df
 
 # if __name__ == "__main__":
 #
